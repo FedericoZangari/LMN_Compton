@@ -1,81 +1,67 @@
 #include <iostream>
-#include "TCanvas.h"
+#include <fstream>
+#include "TH1F.h"
 #include "TF1.h"
 #include "TApplication.h"
-#include "TH1F.h"
-#include "TStyle.h"
-#include <fstream>
-	#include <fstream>
-	#include <string>
-	#include <iostream>
-	#include <cstdio>
-	#include <vector>
-    #include <math.h>
-    #include <iomanip>
-    #include "TH1F.h"
-    #include "TCanvas.h"
-    #include "TApplication.h"
-    #include "TAxis.h"
-    #include "TGraph.h"
-
+#include "TCanvas.h"
 
 using namespace std;
 
-TH1F* ReadFill( const char* Filename ) {
-		
-		ifstream f(Filename);
-        TH1F *h1 = new TH1F("h1", "Spettro", 300, 0, 300);
-        cout << "ciao" << endl;
-		if(!f){
-			cerr <<"Error: cannot open file " <<endl;
-			exit(0);
-		}
-		else{
+TH1F* ReadFillAll( const char* Filename) {
+   
+	ifstream f(Filename);
+    TH1F *h1 = new TH1F("h1", "Spettro", 7725, 0, 7725);
+    int i = 0;
+	if(!f){
+  		cerr <<"Error: cannot open file " <<endl;
+		exit(0);
+	}
+  	else{
             double var;
 			for (;;){
-					f>> var;
-                    f >> var;
-					h1->Fill(var);		
-				
 					
+                    f >> var;
+                    h1->SetBinContent(i,var);		
+									
 					if(f.eof()){
 						cout << "End of file reached "<< endl;
 						break;
-					}		
+					}
+                    i++;		
 			}
-		}
-		f.close();	
-		return h1;
-	}
+		}	f.close();
 
-int main(int argc, char** argv){
-        
-        if ( argc < 2 ) {
-    	    cout << "Code usage : " << argv[0] << " <input_filename> " << endl;
-    	    return -1 ;
-	    } 
-        TApplication app("App", &argc, argv);
-        TCanvas *c = new TCanvas("c", "Spettro", 800,800);
-        cout << argv[1] << endl;
-        TH1F *data = ReadFill(argv[1]);
-        
-              
+	return h1;
+}
 
-        
-        data->Draw();
-        data->GetXaxis()->SetTitle("x");
-        data->GetYaxis()->SetTitle("y");
-        data->SetFillColor(kAzure+6);
-        data->SetLineColor(kRed-1);
-/*
-        TF1 *f = new TF1("f", "gaus", -4, 4);
-        h1->Fit(f);
-        h1->Draw("Same");
 
-        //gStyle->SetOptFit();
-        //c->SaveAs("esercizio4.png");
-*/
-        
-        app.Run();
-        return 0;
+int main( int argc , char** argv ) {
+
+  if ( argc < 2 ) {
+    cout << "Uso del programma : " << argv[0] << " <filename> " << endl;
+    return -1 ;
+  }  
+
+  TApplication app("app",0,0);
+  
+  // leggo dati da file
+
+  TH1F *h = ReadFillAll(argv[1]);
+  h->Sumw2();
+  h->Rebin(15);
+
+	//h->StatOverflows( kTRUE );
+	
+
+  // disegno
+
+  TCanvas mycanvas ("Histo","Histo");
+  h->Draw();
+  h->GetXaxis()->SetTitle("channel");
+  h->GetYaxis()->SetTitle("counts");
+  string title( argv[1]);
+  title = title + ".png";
+  mycanvas.SaveAs(title.c_str());
+  app.Run();
+  
 }

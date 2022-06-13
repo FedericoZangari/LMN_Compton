@@ -1,3 +1,8 @@
+/*
+Il programma legge in ingresso il file di dati del background e lo spettro in funzione dell'angolo con il suo tempo di acquisizione, restituisce in output un file in cui 
+allo spettro misurato viene sottratto il background riscalato per il rapporto dei tempi di acquisizione.
+*/
+
 #include <iostream>
 #include <fstream>
 #include "TH1F.h"
@@ -10,24 +15,24 @@ using namespace std;
 TH1F* ReadFillAll( const char* Filename) {
     
 	ifstream f(Filename);
-    TH1F *h1 = new TH1F("h1", "Spettro", 7600, 0, 7600);
-    int i = 0;
+  TH1F *h1 = new TH1F("h1", "Spettro", 7725, 0, 7725);
+  int i = 0;
 	if(!f){
   		cerr <<"Error: cannot open file " <<endl;
 		exit(0);
 	}
-  	else{
-            double var;
+  else{
+      double var;
 			for (;;){
 					
-                    f >> var;
-                    h1->SetBinContent(i,var);		
+          f >> var;
+          h1->SetBinContent(i,var);		
 									
 					if(f.eof()){
 						cout << "End of file reached "<< endl;
 						break;
 					}
-                    i++;		
+          i++;		
 			}
 		}	f.close();
 
@@ -37,54 +42,63 @@ TH1F* ReadFillAll( const char* Filename) {
 
 int main( int argc , char** argv ) {
 
-  if ( argc < 5 ) {
-    cout << "Uso del programma : " << argv[0] << " <filename> " << endl;
+  if ( argc < 4 ) {
+    cout << "Uso del programma : " << argv[0] << " <background_file> <spettro_file> <tempo di acquisizione>" << endl;
     return -1 ;
   }  
 
   TApplication app("app",0,0);
   
   // leggo dati da file
-    double scale = atof(argv[3])/314353.;
+  double scale = atof(argv[3])/314353.;  //riscalo per il rapporto dei tempi di acquisizione
   TH1F *bkg = ReadFillAll(argv[1]);
   TH1F *sig = ReadFillAll(argv[2]);
+  string title( argv[2]);
+  string theta = title.substr(5,2);
+  //string theta = title.substr(5,3);
 
-  // creo e riempio il vettore. L'opzione StatOvergflows permetter di calcolalare
-  // le informazioni statistiche anche se il dato sta fuori dal range di definizione
-  // dell'istogramma
-  
-  
+ 
 	bkg->StatOverflows( kTRUE );
-    sig->StatOverflows( kTRUE );
+  sig->StatOverflows( kTRUE );
+  //bkg->Sumw2();
+  sig->Sumw2();
 	
-	bkg->SetLineColor(kCyan-7);
-    sig->SetFillColor(kRed);
-    TCanvas can1 ("bo","bo");
-    bkg->Draw();
-    
-    bkg->SetTitle("background");
-    sig->SetTitle("signal");
-  // accedo a informazioni statistiche 
-
-  //cout << "Media dei valori caricati = " << h->GetMean() << endl;
-
-  // disegno
+	bkg->SetLineColor(kCyan);
+  
+  TCanvas can1 ("c","c");
+  bkg->Draw();
+  bkg->SetTitle("Spettro di background");
+  bkg->GetXaxis()->SetTitle("Numero del canale MCA");
+  bkg->GetYaxis()->SetTitle("Conteggi per canale");
+  can1.SaveAs("background.png");
 
   TCanvas mycanvas ("Histo","Histo");
   mycanvas.cd();
   TH1F * bkg2 = (TH1F*)(bkg->Clone("bkg2"));
   bkg2->Scale(scale);
-  bkg2->Draw();
-    sig->Add(bkg2,-1);
-  TCanvas can("plot", "plot");
+  //bkg->Draw();
+  sig->Add(bkg2,-1);
 
-  sig->Draw();
-    //cout << bkg->GetBinContent(20) << endl << bkg2->GetBinContent(20);
-
-    ofstream out(argv[4]);
-    for(int i =0; i< 7600; i++){
+  for(int i =0; i< 7725; i++){
+        if (sig->GetBinContent(i) < 0.) sig->SetBinContent(i, 0.0);
+  }
+  string title3 = "theta" + theta +"_parsed.dat";
+  ofstream out(title3.c_str());
+  for(int i =0; i< 7725; i++){
         out << sig->GetBinContent(i) << endl;
-    }
+  }
+
+  sig->SetLineColor(kRed);
+  string title2 = "Spettro senza background #theta = " + theta + "#circ"; 
+  sig->SetTitle(title2.c_str());
+  sig->GetXaxis()->SetTitle("Numero del canale MCA");
+  sig->GetYaxis()->SetTitle("Conteggi per canale");
+  sig->Rebin(15);
+  sig->Draw();
+  string title4 = "theta" + theta +"_parsed.png";
+  mycanvas.SaveAs(title4.c_str());
+    
+  
   app.Run();
   
 }
