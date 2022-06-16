@@ -1,3 +1,6 @@
+/*
+Questo programma disegna lo spettro dei dati letti in ingresso
+*/
 #include <iostream>
 #include <fstream>
 #include "TH1F.h"
@@ -60,7 +63,11 @@ int main( int argc , char** argv ) {
   h->GetXaxis()->SetTitle("channel");
   h->GetYaxis()->SetTitle("counts");
   string title( argv[1]);
-  title = title + ".png";
+  /*string theta = title.substr(5,3);       //per plottare gli spettri di scattering
+  title = "theta" + theta +".png";
+  string title2 = "Spettro #theta = " + theta + "#circ";
+  h->SetTitle(title2.c_str());*/
+  title = title +".png";
   mycanvas.SaveAs(title.c_str());
   app.Run();
   

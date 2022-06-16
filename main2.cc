@@ -1,6 +1,6 @@
 /*
 Questo programma esegue un fit gaussiano di un istogramma. Il programma prende in ingresso il file di dati dell'istogramma e
-i canali di inizio e di fine della regione in cui si vuole eseguire il fit.
+i canali di inizio e di fine della regione in cui si vuole eseguire il fit. Calcola anche l'integrale del picco e dello spettro
 */
 
 #include <iostream>
@@ -15,7 +15,7 @@ using namespace std;
 TH1F* ReadFillAll( const char* Filename) {
   
 	ifstream f(Filename);
-  TH1F *h1 = new TH1F("h1", "Spettro", 7725, 0, 7725);
+  TH1F *h1 = new TH1F("h1", "Fit gaussiano ", 7725, 0, 7725);
   int i = 0;
 	if(!f){
   		cerr <<"Error: cannot open file " <<endl;
@@ -56,10 +56,13 @@ int main( int argc , char** argv ) {
   TH1F * h2 = (TH1F*)(h->Clone("h2"));
   h->Rebin(15);
   TCanvas *c=new TCanvas();
+  h->GetXaxis()->SetTitle("Numero del canale MCA");
+  h->GetYaxis()->SetTitle("Conteggi per canale");
   h->Draw();
   TF1 *f = new TF1("f", "gaus", atoi(argv[2]),atoi(argv[3]));
   h->Fit(f,"RW");
   f->Draw("same");
+  //c->SaveAs("fit.png"); 
   Double_t mean = f->GetParameter(1);
   Double_t sigma = f->GetParameter(2);
   cout << "Valor medio: \t\t" << mean << endl;
@@ -71,39 +74,3 @@ int main( int argc , char** argv ) {
 
 
 
-
-/*
-
-  
-  
-  
-  TH1F *h = ReadFillAll(argv[1], argv[2], argv[3]);
-  h->Sumw2();  
-  cout << h->GetBinContent(2362) << endl;
-	//h->StatOverflows( kTRUE );
-	h->Rebin(15);
-  cout << h->GetBinContent(2362) << endl;
-	h->SetFillColor(kCyan-7);
-  
-  // disegno
-  cout << h->GetBinContent(2362) << endl;
-  TCanvas mycanvas ("Histo","Histo");
-  //h->Draw();
-  cout << h->GetBinContent(2362) << endl;
-  h->GetXaxis()->SetTitle("measurement");
-  TF1 *f = new TF1("f", "gaus", atoi(argv[2]),atoi(argv[3]));
-  //h->GetXaxis()->SetRange(atoi(argv[2]),atoi(argv[3]));
-  f->SetParLimits(1,atoi(argv[2]),atoi(argv[3]));
-  f->SetParameter(2,atoi(argv[3])-atoi(argv[2]));
-  cout << h->GetBinContent(2362) << endl;
-  
-  h->Fit(f,"RW");   
-  h->Draw("");
-  Double_t mean = f->GetParameter(1);
-  Double_t sigma = f->GetParameter(2);
-  cout << mean-sigma << "\t" << mean+sigma << endl;
-  cout << h->Integral(mean-sigma, mean+sigma) << endl;
-  cout << h->GetBinContent(2362) << endl;
-  //cout << h->Integral();
-  app.Run();
-  */

@@ -55,12 +55,12 @@ int main( int argc , char** argv ) {
   TH1F *sig = ReadFillAll(argv[2]);
   string title( argv[2]);
   string theta = title.substr(5,2);
-  //string theta = title.substr(5,3);
+  //string theta = title.substr(5,3);   // per fare il plot a theta = 150
 
  
 	bkg->StatOverflows( kTRUE );
   sig->StatOverflows( kTRUE );
-  //bkg->Sumw2();
+  bkg->Sumw2();
   sig->Sumw2();
 	
 	bkg->SetLineColor(kCyan);
